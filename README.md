@@ -40,7 +40,7 @@ A feed is a directory under `feeds/` holding its `config.toml`, `editorial-polic
 1. **The subscriptions** — replace [`feeds/general/sources.opml`](feeds/general/sources.opml) with the OPML your feed reader exports, and commit it: CI reads the list directly.
 2. **The policy** — [`feeds/general/editorial-policy.md`](feeds/general/editorial-policy.md) is the whole product. Its topics, exclusions and penalties are examples, not defaults.
 3. **The contact URL** in `[fetch] user_agent`, so feed operators have somewhere to complain to.
-4. **The feed's URL** — `[publish] site_url` and `[deploy] project` are placeholders, and `provider` is `"none"`. The engine's [SETUP step 8](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/SETUP.md#8-choose-the-feeds-url) generates a name and explains why it must not be descriptive. The URL is baked into the feed, so changing it later makes every reader treat every item as new.
+4. **The feed's URL** — `[publish] site_url` and `[deploy] project` are placeholders, and `provider` is `"none"`. The engine's [SETUP documentation](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/SETUP.md) explains how to generate a name and why it must not be descriptive. The URL is baked into the feed, so changing it later makes every reader treat every item as new.
 5. **The secrets** — `ANTHROPIC_API_KEY`, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, as repository secrets. Nothing else the run needs is outside the repository.
 6. **The triggers** — uncomment the `schedule:` block in [`daily.yml`](.github/workflows/daily.yml) and the `pull_request:` and `push:` blocks in [`validate.yml`](.github/workflows/validate.yml). Do this last: every unattended run spends model credits.
 
@@ -102,6 +102,6 @@ The secrets are shared by every feed, so nothing else has to change.
 ## Reference
 
 - [Engine README](https://github.com/ghurault/llm-curated-rss-engine/blob/main/README.md): the pipeline, privacy, commands and flags.
-- [Engine SETUP](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/SETUP.md): a configuration repository from scratch, the Cloudflare Worker, the secrets, and what to check when something is wrong.
+- [Engine SETUP](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/SETUP.md): detailed explanation on how to get your instance running.
 - [Engine ARCHITECTURE](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/ARCHITECTURE.md): why it is shaped this way.
 - [Engine scoring spec](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/scoring-spec.md): how judgements become a ranking, which the `[policy]` settings tune.
