@@ -1,0 +1,96 @@
+name: validate
+
+# The runners under feeds/, checked by the engine this repository pins, and the
+# wiring around them that curate-validate cannot see. It needs no secret and
+# spends nothing.
+#
+# DISABLED in this example, like daily.yml: uncomment the two triggers below to
+# have it check every pull request and every push to main. Leave them
+# unfiltered — a workflow triggered on `paths: [feeds/**]` that is later marked
+# a required check leaves every pull request not touching feeds/ pending forever.
+on:
+  workflow_dispatch:
+  # pull_request:
+  # push:
+  #   branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      image: ${{ steps.pinned.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: pinned
+        name: Read the image the devcontainer pins
+        run: |
+          image=$(sed -n 's/^FROM \(ghcr\.io\/[^ ]*@sha256:[0-9a-f]\{64\}\)$/\1/p' .devcontainer/Dockerfile)
+          if [ -z "$image" ]; then
+            echo "::error file=.devcontainer/Dockerfile::no FROM pinned by digest"
+            exit 1
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      # GitHub allows no expression in `uses:`, so the engine commit and this
+      # digest are written separately; moving one without the other fails here.
+      - name: Check daily.yml runs the same image
+        env:
+          IMAGE: ${{ steps.pinned.outputs.image }}
+        run: |
+          sha=$(sed -n 's/^ *uses: ghurault\/llm-curated-rss-engine\/\.github\/workflows\/curate\.yml@\([0-9a-f]\{40\}\)$/\1/p' .github/workflows/daily.yml)
+          if [ -z "$sha" ]; then
+            echo "::error file=.github/workflows/daily.yml::no engine curate.yml pinned by commit"
+            exit 1
+          fi
+          url="https://raw.githubusercontent.com/ghurault/llm-curated-rss-engine/$sha/.github/workflows/curate.yml"
+          runs=$(curl -fsSL "$url" | sed -n 's/^ *image: \(ghcr\.io\/[^ ]*@sha256:[0-9a-f]\{64\}\)$/\1/p')
+          if [ "$runs" != "$IMAGE" ]; then
+            echo "::error file=.devcontainer/Dockerfile::the engine at $sha runs ${runs:-no pinned image}, not $IMAGE"
+            exit 1
+          fi
+
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # A runner missing from the matrix silently stops being curated. Its own
+      # job, so that a mismatch here does not also skip validating the runners.
+      - name: Check daily.yml names every runner and nothing else
+        run: |
+          matrix=$(sed -n "s/.*&& '\[\([^]]*\)\]' ||.*/\1/p" .github/workflows/daily.yml | tr -d '" ' | tr , '\n' | sort)
+          runners=$(find feeds -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+          if [ -z "$matrix" ] || [ "$matrix" != "$runners" ]; then
+            echo "::error file=.github/workflows/daily.yml::matrix [$(echo $matrix)] but feeds/ has [$(echo $runners)]"
+            exit 1
+          fi
+
+  runners:
+    needs: engine
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: ${{ needs.engine.outputs.image }}
+    # Container jobs default to `sh`.
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # No secret is passed, and none is needed: the command reads the config
+      # and the filesystem only.
+      - run: curate-validate feeds/

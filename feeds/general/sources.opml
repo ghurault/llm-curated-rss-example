@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<opml version="1.0">
+    <body>
+        <outline text="News" title="News">
+            <outline type="rss" text="BBC News - World" title="BBC News - World" xmlUrl="https://feeds.bbci.co.uk/news/world/rss.xml" htmlUrl="https://www.bbc.co.uk/news/world"/>
+            <outline type="rss" text="CNN - World" title="CNN - World" xmlUrl="http://rss.cnn.com/rss/edition_world.rss" htmlUrl="https://edition.cnn.com/world"/>
+            <outline type="rss" text="Le Monde.fr - Une" title="Le Monde.fr - Une" xmlUrl="https://www.lemonde.fr/rss/une.xml" htmlUrl="https://www.lemonde.fr"/>
+        </outline>
+    </body>
+</opml>

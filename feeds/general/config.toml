@@ -1,0 +1,64 @@
+# The one runner in this example: general news from three sources.
+#
+# Trimmed to the settings worth deciding. `curate-template config` prints the
+# annotated reference for every other one, at the version the engine pins.
+
+[paths]
+sources = "sources.opml"
+policy = "editorial-policy.md"
+corpus_dir = "../../eval/corpus/general"
+state_dir = "../../state/general"
+build_dir = "../../build/general"
+
+[fetch]
+# Contact URL for feed operators who want to complain about traffic. Replace it.
+user_agent = "curated-feed/0.1 (personal feed curation; contact: https://example.com/contact)"
+
+[paywall]
+# Le Monde is partly subscriber-only, and a pick the reader cannot open is a
+# wasted slot in a feed capped at ten items a day.
+enabled = true
+
+[score]
+# "stub" (no calls), "file" (replay a saved response), "anthropic" (calls Claude).
+provider = "anthropic"
+
+# The cheap place to start. Sonnet buys better editorial judgement for a few
+# dollars a month more.
+model = "claude-haiku-4-5"
+
+# A truncated response is a hard failure, not a short day.
+max_tokens = 32000
+
+# low/medium/high/xhigh/max. Empty omits the parameter — REQUIRED for Haiku 4.5,
+# which rejects the request otherwise. Set it to "medium" in the same edit that
+# moves this runner to Sonnet.
+effort = ""
+
+[policy]
+# Must equal the maximum consequence score (engine scoring spec §3) — not a tunable.
+floor = 3.0
+
+# Never publish more than this many items a day, and never pad to reach it.
+max_items = 10
+
+# Topic matches are worth +1 each up to this total. The policy lists two topics,
+# so this binds only once a third is added.
+preference_cap = 2
+
+# What the published feed says about an item: "none" or "minimal".
+rationale_mode = "minimal"
+
+[publish]
+title = "Curated Feed: General"
+
+# Replace once you have a Worker (engine SETUP, step 8). The feed's identity is
+# built from this, so changing it after the first upload makes every reader treat
+# every item as new. Keep it in step with [deploy] project below.
+site_url = "https://<worker-name>.<account-subdomain>.workers.dev"
+
+[deploy]
+# "none" uploads nothing; the built feed stays in build/. Switch to "wrangler"
+# and name the Worker here once the URL above is real.
+provider = "none"
+project = ""

@@ -1,0 +1,15 @@
+# What a run produces stays local, and is ignored by a .gitignore inside each of
+# build/, state/, eval/corpus/ and eval/labels/, next to what it ignores.
+#
+# feeds/ is the exception: it is committed whole, subscription lists included,
+# because CI reads them directly.
+
+# The devcontainer reads this at the repository root; it holds ANTHROPIC_API_KEY.
+.env
+
+# Scratch files from scoring a day by hand.
+day.md
+response.json
+
+# Local overrides of committed configuration.
+config.local.toml

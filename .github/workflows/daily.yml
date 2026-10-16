@@ -1,0 +1,79 @@
+name: daily
+
+# The only place that publishes, and it publishes one feed per runner. What that
+# takes lives in the engine's curate.yml; this is the half that belongs to the
+# runners — the clock, the matrix, and the credentials.
+#
+# DISABLED in this example: the schedule is commented out below, so nothing runs
+# unattended. Uncomment it once the three secrets exist and the runner's
+# [deploy] provider is "wrangler" — until then, a dispatched run builds the feed
+# and uploads nothing.
+#
+# Everything the run needs that is not in the repository arrives as a secret:
+# ANTHROPIC_API_KEY, CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. The
+# subscription lists are committed, so there is nothing left to restore.
+on:
+  workflow_dispatch:
+    inputs:
+      feed:
+        # Keep these options in step with the matrix below.
+        description: Which feed to curate
+        type: choice
+        options: [all, general]
+        default: all
+      provider:
+        description: Scorer to use
+        type: choice
+        options: [anthropic, stub]
+        default: anthropic
+      date:
+        description: Replay a past collection day (YYYY-MM-DD); empty means today
+        type: string
+        default: ""
+  # Every unattended run spends model credits, once per feed. 06:00 UTC is late
+  # enough that yesterday's feeds have settled; the reader's own polling then
+  # adds hours on top, so this is not the time the entries appear.
+  # schedule:
+  #   - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  curate:
+    strategy:
+      # One feed's bad day is not another's. A model timeout or a malformed
+      # response must not cancel a run that would have published.
+      fail-fast: false
+      matrix:
+        # Hardcoded, and held in step with the directories under feeds/ by
+        # validate.yml — a matrix read off the filesystem would make a stray
+        # directory a live runner. A dispatch may narrow it to one feed, so that
+        # re-scoring one does not spend credits on the rest; `inputs.feed` is
+        # null on a schedule, which is the `all` case.
+        feed: ${{ fromJSON((inputs.feed == null || inputs.feed == 'all') && '["general"]' || format('["{0}"]', inputs.feed)) }}
+
+    # Per feed rather than per workflow: two feeds never queue behind each other,
+    # while two runs of the same feed still cannot both append to its published
+    # log or race to be its Worker's current deployment.
+    concurrency:
+      group: daily-${{ matrix.feed }}
+
+    # Pinned by commit, never a branch, because the commit also pins the image
+    # digest inside it: moving this SHA is how an engine release reaches the
+    # daily run, and nothing pushed to the engine's main does. Move the digest in
+    # .devcontainer/Dockerfile with it; validate.yml fails until they agree.
+    uses: ghurault/llm-curated-rss-engine/.github/workflows/curate.yml@3e4d41defe380dc54b23561451fffe3ce7069546
+    with:
+      feed: ${{ matrix.feed }}
+      # The dispatch defaults do not apply to a scheduled run, where every input
+      # is null, so the fallbacks are repeated here rather than left to the form.
+      provider: ${{ inputs.provider || 'anthropic' }}
+      date: ${{ inputs.date || '' }}
+    # Named one by one rather than inherited: `secrets: inherit` hands the called
+    # workflow every secret this repository holds, which is the wrong default to
+    # establish in the half that will be calling somebody else's workflow.
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

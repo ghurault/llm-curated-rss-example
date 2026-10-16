@@ -1,0 +1,24 @@
+{
+  "name": "curated-feed-example",
+  // The engine image the daily workflow uses, so every curate-* command is on
+  // PATH at the version CI runs.
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // The image runs as root; common-utils adds a user so that what is written to
+  // the workspace is not root-owned.
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode"
+    }
+  },
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "tamasfe.even-better-toml"]
+    }
+  },
+  // Holds ANTHROPIC_API_KEY. The file must exist, even empty, or the container
+  // does not start.
+  "runArgs": ["--env-file", ".env"]
+}
