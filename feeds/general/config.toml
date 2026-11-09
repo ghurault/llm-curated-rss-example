@@ -20,19 +20,30 @@ user_agent = "curated-feed/0.1 (personal feed curation; contact: https://example
 enabled = true
 
 [score]
-# "stub" (no calls), "file" (replay a saved response), "anthropic" (calls Claude).
+# "stub" (no calls), "file" (replay a saved response), "anthropic" (calls
+# Claude), "openai" (calls any OpenAI-compatible endpoint).
 provider = "anthropic"
-
-# The cheap place to start. Sonnet buys better editorial judgement for a few
-# dollars a month more.
-model = "claude-haiku-4-5"
 
 # A truncated response is a hard failure, not a short day.
 max_tokens = 32000
 
+# Each provider names its own model, so `--provider` switches both together.
+[score.anthropic]
+# The cheap place to start. Sonnet buys better editorial judgement for a few
+# dollars a month more.
+model = "claude-haiku-4-5"
+
 # low/medium/high/xhigh/max. Empty omits the parameter — REQUIRED for Haiku 4.5,
 # which rejects the request otherwise. Set it to "medium" in the same edit that
 # moves this runner to Sonnet.
+effort = ""
+
+# Unused while provider is "anthropic". The key is always OPENAI_API_KEY.
+[score.openai]
+# Empty is OpenAI itself; otherwise the endpoint's API root, usually ending in /v1.
+base_url = ""
+model = ""
+# Sent as reasoning_effort. Empty omits it: not every server or model takes it.
 effort = ""
 
 [policy]
