@@ -41,7 +41,7 @@ A feed is a directory under `feeds/` holding its `config.toml`, `editorial-polic
 2. **The policy** — [`feeds/general/editorial-policy.md`](feeds/general/editorial-policy.md) is the whole product. Its topics, exclusions and penalties are examples, not defaults.
 3. **The contact URL** in `[fetch] user_agent`, so feed operators have somewhere to complain to.
 4. **The feed's URL** — `[publish] site_url` and `[deploy] project` are placeholders, and `provider` is `"none"`. The engine's [SETUP documentation](https://github.com/ghurault/llm-curated-rss-engine/blob/main/docs/SETUP.md) explains how to generate a name and why it must not be descriptive. The URL is baked into the feed, so changing it later makes every reader treat every item as new.
-5. **The secrets** — `ANTHROPIC_API_KEY`, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, as repository secrets. Nothing else the run needs is outside the repository.
+5. **The secrets** — the scoring key, `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, as repository secrets. The scoring key is `ANTHROPIC_API_KEY` for `provider = "anthropic"`, or `OPENAI_API_KEY` for `provider = "openai"`, which calls any OpenAI-compatible endpoint set in `[score.openai]`. Nothing else the run needs is outside the repository.
 6. **The triggers** — uncomment the `schedule:` block in [`daily.yml`](.github/workflows/daily.yml) and the `pull_request:` and `push:` blocks in [`validate.yml`](.github/workflows/validate.yml). Do this last: every unattended run spends model credits.
 
 Prove the feed in a reader with the `stub` scorer, which spends nothing, before the schedule starts paying for it.
@@ -50,7 +50,7 @@ Prove the feed in a reader with the `stub` scorer, which spends nothing, before 
 
 Open the repository in the devcontainer (_Dev Containers: Reopen in Container_).
 It is built from the same engine image CI uses, so every `curate-*` command is on `PATH` at the version CI runs.
-The container reads `.env` at the repository root, which must exist — `touch .env` before reopening — and which is where `ANTHROPIC_API_KEY` goes if you want to score by hand.
+The container reads `.env` at the repository root, which must exist — `touch .env` before reopening — and which is where `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` goes if you want to score by hand.
 
 There is no root `config.toml`, so every command names its runner:
 
