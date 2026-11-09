@@ -64,7 +64,7 @@ jobs:
     # digest inside it: moving this SHA is how an engine release reaches the
     # daily run, and nothing pushed to the engine's main does. Move the digest in
     # .devcontainer/Dockerfile with it; validate.yml fails until they agree.
-    uses: ghurault/llm-curated-rss-engine/.github/workflows/curate.yml@3e4d41defe380dc54b23561451fffe3ce7069546
+    uses: ghurault/llm-curated-rss-engine/.github/workflows/curate.yml@573ffc02a63a116c10cc50927a3a8bca53187f3d
     with:
       feed: ${{ matrix.feed }}
       # The dispatch defaults do not apply to a scheduled run, where every input
