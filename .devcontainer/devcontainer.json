@@ -18,7 +18,7 @@
       "extensions": ["esbenp.prettier-vscode", "tamasfe.even-better-toml"]
     }
   },
-  // Holds ANTHROPIC_API_KEY. The file must exist, even empty, or the container
+  // Holds the scoring key. The file must exist, even empty, or the container
   // does not start.
   "runArgs": ["--env-file", ".env"]
 }

@@ -5,13 +5,14 @@ name: daily
 # runners — the clock, the matrix, and the credentials.
 #
 # DISABLED in this example: the schedule is commented out below, so nothing runs
-# unattended. Uncomment it once the three secrets exist and the runner's
+# unattended. Uncomment it once the secrets exist and the runner's
 # [deploy] provider is "wrangler" — until then, a dispatched run builds the feed
 # and uploads nothing.
 #
 # Everything the run needs that is not in the repository arrives as a secret:
-# ANTHROPIC_API_KEY, CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. The
-# subscription lists are committed, so there is nothing left to restore.
+# the scoring key (ANTHROPIC_API_KEY or OPENAI_API_KEY, whichever provider the
+# runners use), CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. The subscription
+# lists are committed, so there is nothing left to restore.
 on:
   workflow_dispatch:
     inputs:
@@ -24,7 +25,7 @@ on:
       provider:
         description: Scorer to use
         type: choice
-        options: [anthropic, stub]
+        options: [anthropic, openai, stub]
         default: anthropic
       date:
         description: Replay a past collection day (YYYY-MM-DD); empty means today
@@ -63,7 +64,7 @@ jobs:
     # digest inside it: moving this SHA is how an engine release reaches the
     # daily run, and nothing pushed to the engine's main does. Move the digest in
     # .devcontainer/Dockerfile with it; validate.yml fails until they agree.
-    uses: ghurault/llm-curated-rss-engine/.github/workflows/curate.yml@656697bf90b1a12ff013a6a59654546343d30308
+    uses: ghurault/llm-curated-rss-engine/.github/workflows/curate.yml@573ffc02a63a116c10cc50927a3a8bca53187f3d
     with:
       feed: ${{ matrix.feed }}
       # The dispatch defaults do not apply to a scheduled run, where every input
@@ -75,5 +76,6 @@ jobs:
     # establish in the half that will be calling somebody else's workflow.
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
